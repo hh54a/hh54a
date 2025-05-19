@@ -1,1 +1,67 @@
-哈哈哈哈
+function getQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) {
+        var value = unescape(r[2]).replace(/[^a-zA-Z0-9]/g, '');
+        return value || null;
+    }
+    return null;
+}
+
+// @Today1921 今日防红站
+// 禁止生成未备案涉诈涉黄等违法违规内容
+// 违者将封禁账户并将相关信息提交给有关部门
+
+function fetchTitle(url) {
+    $.ajax({
+        url: "https://d.6x5.cn/api.php",
+        type: "GET",
+        dataType: "json",
+        data: {
+            act: 'get_title',
+            url: url
+        },
+        success: function(response) {
+            if (response.code == 1 && response.title) {
+                document.title = response.title;
+            }
+        }
+    });
+}
+
+function loadContent(url) {
+    fetchTitle(url);
+    var iframe = document.createElement('iframe');
+    iframe.src = url;
+    document.getElementById('content').appendChild(iframe);
+}
+
+$(function() {
+    var shortId = getQueryString("s/u/");
+    var fallbackUrl = "https://www.baidu.com";
+
+    if (!shortId) {
+        window.location.href = fallbackUrl;
+        return;
+    }
+
+    $.ajax({
+        url: "https:/d.6x5.cn/api.php",
+        type: "GET",
+        dataType: "json",
+        data: {
+            act: 'geturl',
+            id: shortId
+        },
+        success: function(response) {
+            if (response.code == 1) {
+                loadContent(response.url);
+            } else {
+                window.location.href = fallbackUrl;
+            }
+        },
+        error: function() {
+            window.location.href = fallbackUrl;
+        }
+    });
+});
